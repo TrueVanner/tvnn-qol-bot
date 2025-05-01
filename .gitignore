@@ -1,0 +1,6 @@
+.env
+bin/
+node_modules/
+.vscode/
+*cookies.txt
+plugins/
