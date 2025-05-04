@@ -29,6 +29,6 @@ COPY --from=builder /app/bot_bin /etc/bot/
 COPY .env ./
 # yt-dlp plugins
 COPY plugins /etc/yt-dlp/plugins
-COPY _cookies.txt ./cookies.txt
+COPY cookies.txt ./cookies.txt
 # run the bot
 CMD ["/etc/bot/bot_bin"]

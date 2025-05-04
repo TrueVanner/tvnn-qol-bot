@@ -141,17 +141,18 @@ function getInform(ctx: Context, msg_id: number) {
  */
 const errorMessages = {
     atGettingInfo:
-        `Failed to obtain info from a YouTube video. This is either some fuckup with Telegram API on my side, or an issue 
-	with how YouTube processes YT-DLP requests,and if the error repeats means I have to add some workarounds. Regardless, try again soon.`,
+        `Failed to obtain info from a YouTube video. Try again, and if not some coding fuckup, the error is either:\n
+        1. Network connection issue, try again soon\n
+        2. An issue with how YouTube processes YT-DLP requests - try again, and if the error repeats means I have to add some workarounds.`,
     atDownload:
         `Encountered an error when downloading the file, try again; if it repeats, it's most likely either one of these:\n
-				1. <b>You tried to download a large file which either takes 500 seconds to properly upload or weights more than 2GB.</b> 
-				Both are internal limitations that I can't change, so reduce the filesize or use /format to simply format the YouTube link
-				and send it this way.\n
-				2. <b>A code issue on my size.</b>\n
-				3. <b>A deeper issue with YT-DLP.</b> This is the library I use for downloading the video, and I have no control over it.
-				If it fails consistently, it most likely indicates a change in how YouTube processes YT-DLP requests and possibly mean 
-				that the bot can no longer function.`,
+        1. <b>You tried to download a large file which either takes 500 seconds to properly upload or weights more than 2GB.</b> 
+        Both are internal limitations that I can't change, so reduce the filesize or use /format to simply format the YouTube link
+        and send it this way.\n
+        2. <b>A code issue on my size.</b>\n
+        3. <b>A deeper issue with YT-DLP.</b> This is the library I use for downloading the video, and I have no control over it.
+        If it fails consistently, it most likely indicates a change in how YouTube processes YT-DLP requests and possibly mean 
+        that the bot can no longer function.`,
     badURL:
         `The URL you inputted is invalid. The bot only accepts valid YouTube links.`,
 };
@@ -166,6 +167,10 @@ bot.on("callback_query:data", (ctx) => {
     const chat_id = ctx.chatId!;
     const [video_id, format, duration, height, width] = ctx.callbackQuery.data
         .split("|");
+
+    // some video IDs start with a -, which makes yt-dlp treat it as an argument and
+    // instantly fail. So, I am wrapping the ID in a basic link.
+    const url = `https://youtube.com/watch?v=${video_id}`
     // dedicated input when audio is sent; values can't be null|undefined by default
     const isAudio = !height && !width;
 
@@ -198,8 +203,7 @@ bot.on("callback_query:data", (ctx) => {
     const descrFilePath = path.join(process.cwd(), `${video_id}-descr.txt`);
 
     log(`Started downloading video for ${video_id}`);
-    inform("Downloading...");
-
+    
     // common set of args
     let downloadArgs: ArgsOptions = ytdlpArgs({
         format: format,
@@ -207,7 +211,7 @@ bot.on("callback_query:data", (ctx) => {
         writeThumbnail: true,
         convertThumbnails: "jpg",
     });
-
+    
     if (isAudio) {
         downloadArgs = {
             ...downloadArgs,
@@ -232,8 +236,10 @@ bot.on("callback_query:data", (ctx) => {
             },
         } as ArgsOptions & { onProgress: (p: VideoProgress) => void };
     }
-
-    ytdlp.execAsync(video_id, downloadArgs)
+    
+    inform("Downloading...");
+    // some videoIDs = 
+    ytdlp.execAsync(url, downloadArgs) // sanitizing input because it's apparently needed
         .then(async (logs) => {
             log(logs);
             log(
