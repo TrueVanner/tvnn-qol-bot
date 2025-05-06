@@ -51,7 +51,7 @@ bot.api.setMyCommands([
  */
 function isYoutubeURL(url: string) {
     // Regular expression to match YouTube video URLs
-    const youtubeRegex = /(youtube\.com\/watch\?v=|youtu\.be\/)/;
+    const youtubeRegex = /(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)/;
     return youtubeRegex.test(url);
 }
 
