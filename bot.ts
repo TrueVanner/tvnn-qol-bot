@@ -387,10 +387,13 @@ bot.on("message::url", async (ctx) => {
             (f.acodec != "none") && (f.filesize)
         ).sort((a, b) => b.filesize! - a.filesize!)[0];
 
-        // for each quality ID (1080p, 720p, ...) stores the format ID,
+        // list of all possible formats, assuming no 8K+
+        const formats = ['144p', '240p', '360p', '480p', '720p', '1080p', '1440p', '4K']
+
+        // for each quality ID (from formats) stores the format ID,
         // filesize, true height and true width of the video in the format
         const existingFormats: Record<
-            string,
+            typeof formats[number],
             [string, number, number, number]
         > = {};
 
@@ -401,18 +404,17 @@ bot.on("message::url", async (ctx) => {
             const w = format.width!;
             const fID = format.format_id;
             const filesize = format.filesize!;
-            if (filesize < 2147483648) { // 2GB
-                let qID = "144p";
-                if (h < 360) qID = "240p";
-                else if (h < 480) qID = "360p";
-                else if (h < 720) qID = "480p";
-                else if (h < 1080) qID = "720p";
-                else if (h < 1440) qID = "1080p";
-                else if (h < 2160) qID = "1440p";
-                else if (h < 4320) qID = "4K"; // assuming no 8K+ videos
+            
+            let qID = "144p";
+            if (h < 360) qID = "240p";
+            else if (h < 480) qID = "360p";
+            else if (h < 720) qID = "480p";
+            else if (h < 1080) qID = "720p";
+            else if (h < 1440) qID = "1080p";
+            else if (h < 2160) qID = "1440p";
+            else if (h < 4320) qID = "4K"; // assuming no 8K+ videos
 
-                existingFormats[qID] = [fID, filesize, h, w];
-            }
+            existingFormats[qID] = [fID, filesize, h, w];
         });
 
         const videoDescr = generateDescription(info) + `\n${url}`;
@@ -437,18 +439,19 @@ bot.on("message::url", async (ctx) => {
             return `${formattedSize}${sizes[i]}`;
         };
 
-        downloadMenuMarkup.row();
         downloadMenuMarkup.text(
             `Music (≈${formatSize(largest_audio.filesize!)})`,
             `${info.id}|ba|${info.duration}||`,
         );
 
-        Object.entries(existingFormats).forEach(([res, [id, size, h, w]]) => {
-            downloadMenuMarkup.row();
-            downloadMenuMarkup.text(
-                `${res} (≤${formatSize(size + largest_audio.filesize!)})`,
-                `${video_id}|${id}+ba|${info.duration}|${h}|${w}`,
-            );
+        Object.entries(existingFormats)
+            .sort(([res1], [res2]) => formats.indexOf(res1) - formats.indexOf(res2))
+            .forEach(([res, [id, size, h, w]]) => {
+                downloadMenuMarkup.row();
+                downloadMenuMarkup.text(
+                    `${res} (≤${formatSize(size + largest_audio.filesize!)})`,
+                    `${video_id}|${id}+ba|${info.duration}|${h}|${w}`,
+                );
         });
 
         inform("Select one option:", {
