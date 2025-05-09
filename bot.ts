@@ -100,9 +100,7 @@ function generateDescription(info: VideoInfo) {
     // tags ended up being useless, so I am moving away from them
     // const tags = info.tags.slice(0,3).join(", ").slice(0,-2) + (info.tags.length > 3 ? ", ..." : "")
 
-    return `${info.title} [${
-        getDurationString(info.duration)
-    }]\nBy <b>${info.uploader}</b>`;
+    return `<b>[${getDurationString(info.duration)}]</b> ${info.title}\nBy <b>${info.uploader}</b>`;
 }
 
 /**
