@@ -347,12 +347,16 @@ class CallbackQueryHandler {
             let author = "";
             if (hasDescription) {
                 const descrLines = videoDescr.split("\n");
-                log(descrLines[0])
-                log(descrLines[0].match(/<b>.*<\/b> (.*?)/))
-                title = descrLines[0].match(/<b>.*<\/b> (.*?)/)?.[1]
-                    || video_id
-                author = descrLines[1].match(/<b>(.*?)<\/b>/)?.[1]
-                    || "Unknown Artist";
+
+                // Expected format for descrLines[0]: "<b>[timestamp]</b> Title Text"
+                // Regex captures "Title Text"
+                const titleMatch = descrLines[0].match(/^<b>\[.*?\]<\/b>\s*(.*)/);
+                title = titleMatch?.[1] || video_id;
+
+                // Expected format for descrLines[1]: "By <b>Author Name</b>"
+                // Regex captures "Author Name"
+                const authorMatch = descrLines[1].match(/^By <b>(.*?)<\/b>/);
+                author = authorMatch?.[1]?.replace(" - Topic", "") || "Unknown Artist";
             }
 
             return ctx.replyWithAudio(new InputFile(storedFilePath), {
